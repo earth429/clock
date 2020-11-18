@@ -13,7 +13,7 @@ void Timer(int);
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutInitWindowSize(400, 400);
-    glutCreateWindow("timer Sample");
+    glutCreateWindow("Analog Clock ");
     glutDisplayFunc(Display);
     glutReshapeFunc(Reshape);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE); // ダブルバッファリング
@@ -41,12 +41,15 @@ void Display(void)
     double theta_s, x_s, y_s, l_s; // sec
     double theta_m, x_m, y_m; // min
     double theta_h, x_h, y_h; // hour
-    double l_m, l_h, x_c, y_c;
+    double l_m, l_h, x_c, y_c; // 棒の長さ
     x_c = w / 2;
     y_c = h / 2;
-    l_s = 150;
-    l_m = 100;
-    l_h = 80;
+    l_s = y_c - y_c / 4;
+    l_m = y_c - y_c / 4;
+    l_h = (y_c - y_c / 4) / 2;
+    //l_s = 150;
+    //l_m = 150;
+    //l_h = 75;
 
     // sec
     theta_s = 2 * M_PI * sec / 60;
@@ -67,24 +70,56 @@ void Display(void)
 
     // sec
     glLineWidth(1.0);
+    glColor3ub(255, 0, 0);
     glBegin(GL_LINES);
     glVertex2i(x_c, y_c);
     glVertex2i(x_s, y_s);
     glEnd();
 
     // min
-    glLineWidth(2.0);
+    glLineWidth(5.0);
+    glColor3ub(255, 255, 255);
     glBegin(GL_LINES);
     glVertex2i(x_c, y_c);
     glVertex2i(x_m, y_m);
     glEnd();
 
     // hour
-    glLineWidth(4.0);
+    glLineWidth(5.0);
     glBegin(GL_LINES);
     glVertex2i(x_c, y_c);
     glVertex2i(x_h, y_h);
     glEnd();
+
+    // 目盛り60本
+    // 中心座標から150離れたところから中心に向かって5の線を引く
+    // double mem_l = 5;
+    int i;
+    double steps = 60; // 目盛りの個数
+    double angle, radian, startX, startY, endX, endY;
+    //double theta = M_PI - M_PI / 30;
+    //double first_x = x_c + l_s * sin(2 * M_PI);
+    //double first_y = y_c - l_s * cos(2 * M_PI);    
+
+    for (i = 0; i < steps; i++) {
+        angle = i * (360 / steps) - 90; // 角度
+        radian = angle * M_PI / 180; // ラジアンに変換
+        startX = x_c + (l_s - 5) * cos(radian);
+        startY = y_c + (l_s - 5) * sin(radian);
+        endX = x_c + l_s * cos(radian);
+        endY = y_c + l_s * sin(radian);
+        glLineWidth(1.0);
+        glBegin(GL_LINES);
+        glVertex2i(startX, startY);
+        glVertex2i(endX, endY);
+        glEnd();
+
+        //first_x = first_x * cos(theta) - first_y * sin(theta);
+        //first_y = first_x * sin(theta) + first_y * cos(theta);
+    }
+        
+
+
 
     glFlush();
     glutSwapBuffers(); // 作業用バッファと表示用バッファ入れ替え
