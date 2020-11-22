@@ -6,7 +6,8 @@
 #include <math.h>
 #include <string.h>
 
-int mode = 0;
+int backMode = 100;
+int clockMode = 0;
 
 void Display(void);
 void Reshape(int, int);
@@ -16,14 +17,20 @@ void PrintText(int, int, char *);
 void PrintColorText(int, int, char *, int, int, int);
 void PrintGrayText(int, int, char *, int, int, int);
 void GetWday(int, char*);
-void DrawClock(int, int, int);
+void DrawClock(int, int, int, int, int);
 void Keyboard(unsigned char, int, int);
 void BackGround(int, int);
+void DigitalClock(int, int, int, int, int);
+int isNight();
+void DrawSevenSeg(int, int, int, int, int, int, int);
+void DrawColon();
+void SevenSegClock(int, int, int, int, int);
+
 
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutInitWindowSize(400, 400);
-    glutCreateWindow("Analog Clock ");
+    glutCreateWindow("Clock");
     glutDisplayFunc(Display);
     glutReshapeFunc(Reshape);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE); // ダブルバッファリング
@@ -44,32 +51,38 @@ void Display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT); // 初期設定
 
-    if (mode == 0) {
-        DrawClock(0, 0, 0);
-    } else if (mode == 1){
-        DrawClock(255, 255, 255);
+    int w, h;
+    w = glutGet(GLUT_WINDOW_WIDTH);
+    h = glutGet(GLUT_WINDOW_HEIGHT);
+
+    // 初回のみ実行
+    if (backMode == 100) {
+        backMode = isNight();
     }
 
-    //char week[64];
-    //GetWday(wday, week);
-    // 時間を表示
-    /*char time[256];
-    sprintf(time, "%d/%d/%d(%s) %d:%02d:%02d", year + 1900, mon + 1, mday, week, hour, min, sec);
-    int i;
-    double strX, strY;
-    strX = w / 10;
-    strY = h / 10 * 9;
-    PrintGrayText(strX, strY, time, 255, 255, 255);*/
+    //puts("disp");
 
-    //glRasterPos2i(strX, strY);
-    /*glRasterPos2i(10, 10);
-    for (i = 0; i <= strlen(time); i++) {
-        printf("%c", time[i]);
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, time[i]);
-        puts("");
-    }*/
-    //printf("h:%f m:%f s:%f\n", hour, min, sec);
-
+    if (backMode == 0) {
+        if (clockMode == 0) {
+            //puts("WHITE ANA");
+            DrawClock(w, h, 0, 0, 0);
+        } else if(clockMode == 1) {
+            //puts("WHITE DIGI");
+            DigitalClock(w, h, 0, 0, 0);
+        } else if (clockMode == 2) {
+            SevenSegClock(w, h, 0, 0, 0);
+        }
+    } else if (backMode == 1) {
+        if (clockMode == 0) {
+            //puts("BLACK ANA");
+            DrawClock(w, h, 255, 255, 255);
+        } else if (clockMode == 1) {
+            //puts("BLACK DIGI");
+            DigitalClock(w, h, 255, 255, 255);
+        } else if (clockMode == 2) {
+            SevenSegClock(w, h, 255, 255, 255);
+        }
+    }
     
     glFlush();
     glutSwapBuffers(); // 作業用バッファと表示用バッファ入れ替え
@@ -129,7 +142,7 @@ void PrintColorText(int x, int y, char *str, int r, int g, int b) {
 
 void PrintGrayText(int x, int y, char *str, int r, int g, int b) {
     PrintColorText(x, y, str, r, g, b);
-    PrintColorText(x - 1, y - 1, str, 204, 204, 204);
+    //PrintColorText(x - 1, y - 1, str, 204, 204, 204);
 }
 
 void GetWday(int wday, char *week) {
@@ -152,11 +165,8 @@ void GetWday(int wday, char *week) {
     }
 }
 
-void DrawClock(int r, int g, int b) {
+void DrawClock(int w, int h, int r, int g, int b) {
     int i;
-    double w, h;
-    w = glutGet(GLUT_WINDOW_WIDTH);
-    h = glutGet(GLUT_WINDOW_HEIGHT);
 
     double theta_s, x_s, y_s, l_s; // sec
     double theta_m, x_m, y_m; // min
@@ -232,7 +242,7 @@ void DrawClock(int r, int g, int b) {
         startY = y_c + (l_s - 5) * sin(radian);
         endX = x_c + l_s * cos(radian);
         endY = y_c + l_s * sin(radian);
-        glLineWidth(1.0);
+        glLineWidth(2.0);
         glBegin(GL_LINES);
         glVertex2i(startX, startY);
         glVertex2i(endX, endY);
@@ -260,18 +270,32 @@ void Keyboard(unsigned char key, int x, int y) {
         puts("終了");
         exit(0);
     }
-    if (key == 'l') {
-        mode = 0;
+    if (key == 'w') {
+        puts("w");
+        backMode = 0;
+    }
+    if (key == 'b') {
+        puts("b");
+        backMode = 1;
+    }
+    if (key == 'a') {
+        puts("a");
+        clockMode = 0;
     }
     if (key == 'd') {
-        mode = 1;
+        puts("d");
+        clockMode = 1;
+    }
+    if (key == 's') {
+        puts("s");
+        clockMode = 2;
     }
 }
 
 void BackGround(int w, int h) {
-    if (mode == 0) {
+    if (backMode == 0) {
         glColor3ub(255, 255, 255);
-    } else {
+    } else if (backMode == 1) {
         glColor3ub(0, 0, 0);
     }
     
@@ -283,6 +307,210 @@ void BackGround(int w, int h) {
     glEnd();
 }
 
-//void ChangeMode(int mode) {
-    
-//}
+void DigitalClock(int w, int h, int r, int g, int b) {
+    // 時間取得
+    int hour, min, sec, mday, mon, year, wday;
+    GetTime(&hour, &min, &sec, &mday, &mon, &year, &wday);
+
+    // 曜日を文字列に
+    char week[64];
+    GetWday(wday, week);
+
+    // 背景
+    BackGround(w, h);
+
+    // 時間を表示
+    char time[256];
+    sprintf(time, "%d/%d/%d(%s) %d:%02d:%02d", year + 1900, mon + 1, mday, week, hour, min, sec);
+    double strX, strY;
+    strX = w / 2 - (w / 4);
+    strY = h / 2;
+    //strY = h / 10 * 9;
+    PrintGrayText(strX, strY, time, r, g, b);
+
+    //glRasterPos2i(strX, strY);
+    /*glRasterPos2i(10, 10);
+    for (i = 0; i <= strlen(time); i++) {
+        printf("%c", time[i]);
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, time[i]);
+        puts("");
+    }*/
+    //printf("h:%f m:%f s:%f\n", hour, min, sec);
+}
+
+// 昼か夜かを判別
+int isNight() {
+    time_t tt;
+    struct tm *ts;
+    int hour;
+
+    time(&tt);
+    ts = localtime(&tt);
+
+    hour = ts->tm_hour;
+
+    if (hour < 7 || hour > 18) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+void DrawSevenSeg(int w, int h, int r, int g, int b, int slide, int number) {
+    int w_1 = w / 10;
+    int h_1 = h / 10;
+
+    int w_one = w_1 / 10;
+    int h_one = h_1 / 10;
+
+    int Xzurasu = w_1;
+    int Yzurasu = h_1;
+
+    glLineWidth(10.0);
+    glColor3ub(r, g, b);
+
+    // 横棒
+
+    if (number == 0 || number == 2 || number == 3 || number == 5 || number == 6 || number == 7 || number == 8 || number == 9) {
+        // 上
+        glBegin(GL_POLYGON);
+            glVertex2i(w_1 + slide, 5 * h_1 - Yzurasu);
+            glVertex2i(w_1 + w_one + slide,  5 * h_1 - h_one - Yzurasu);
+            glVertex2i(2 * w_1 - w_one + slide, 5 * h_1 - h_one - Yzurasu);
+            glVertex2i(2 * w_1 + slide, 5 * h_1 - Yzurasu);
+            glVertex2i(2 * w_1 - w_one + slide, 5 * h_1 + h_one - Yzurasu);
+            glVertex2i(w_1 + w_one + slide, 5 * h_1 + h_one - Yzurasu);
+        glEnd();
+    }
+
+    if (number == 2 || number == 3 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9) {
+        // 中
+        glBegin(GL_POLYGON);
+            glVertex2i(w_1 + slide, 5 * h_1);  //  すべての基準点
+            glVertex2i(w_1 + w_one + slide,  5 * h_1 - h_one);
+            glVertex2i(2 * w_1 - w_one + slide, 5 * h_1 - h_one);
+            glVertex2i(2 * w_1 + slide, 5 * h_1);
+            glVertex2i(2 * w_1 - w_one + slide, 5 * h_1 + h_one);
+            glVertex2i(w_1 + w_one + slide, 5 * h_1 + h_one);
+        glEnd();
+    }
+
+    if (number == 0 || number == 2 || number == 3 || number == 5 || number == 6 || number == 8 || number == 9) {
+        // 下
+        glBegin(GL_POLYGON);
+            glVertex2i(w_1 + slide, 5 * h_1 + Yzurasu);
+            glVertex2i(w_1 + w_one + slide,  5 * h_1 - h_one + Yzurasu);
+            glVertex2i(2 * w_1 - w_one + slide, 5 * h_1 - h_one + Yzurasu);
+            glVertex2i(2 * w_1 + slide, 5 * h_1 + Yzurasu);
+            glVertex2i(2 * w_1 - w_one + slide, 5 * h_1 + h_one + Yzurasu);
+            glVertex2i(w_1 + w_one + slide, 5 * h_1 + h_one + Yzurasu);
+        glEnd();
+    }
+
+
+    // 縦棒
+
+    if (number == 0 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9) {
+        // 左上
+        glBegin(GL_POLYGON);
+            glVertex2i(w_1 + slide, 5 * h_1 - Yzurasu);
+            glVertex2i(w_1 + w_one + slide, 5 * h_1 + h_one - Yzurasu);
+            glVertex2i(w_1 + w_one + slide,  5 * h_1 - h_one);
+            glVertex2i(w_1 + slide, 5 * h_1);
+            glVertex2i(w_1 - w_one + slide,  5 * h_1 - h_one);
+            glVertex2i(w_1 - w_one + slide, 5 * h_1 + h_one - Yzurasu);
+        glEnd();
+    }
+
+    if (number == 0 || number == 2 || number == 6 || number == 8) {
+        // 左下
+        glBegin(GL_POLYGON);
+            glVertex2i(w_1 + slide, 5 * h_1);
+            glVertex2i(w_1 + w_one + slide, 5 * h_1 + h_one);
+            glVertex2i(w_1 + w_one + slide,  5 * h_1 - h_one + Yzurasu);
+            glVertex2i(w_1 + slide, 5 * h_1 + Yzurasu);
+            glVertex2i(w_1 - w_one + slide,  5 * h_1 - h_one + Yzurasu);
+            glVertex2i(w_1 - w_one + slide, 5 * h_1 + h_one);
+        glEnd();
+    }
+
+    if (number == 0 || number == 1 || number == 2 || number == 3 || number == 4 || number == 7 || number == 8 || number == 9) {
+        // 右上
+        glBegin(GL_POLYGON);
+            glVertex2i(w_1 + Xzurasu + slide, 5 * h_1 - Yzurasu);
+            glVertex2i(w_1 + w_one + Xzurasu + slide, 5 * h_1 + h_one - Yzurasu);
+            glVertex2i(w_1 + w_one + Xzurasu + slide,  5 * h_1 - h_one);
+            glVertex2i(w_1 + Xzurasu + slide, 5 * h_1);
+            glVertex2i(w_1 - w_one + Xzurasu + slide,  5 * h_1 - h_one);
+            glVertex2i(w_1 - w_one + Xzurasu + slide, 5 * h_1 + h_one - Yzurasu);
+        glEnd();
+    }
+
+    if (number == 0 || number == 1 || number == 3 || number == 4 || number == 5 || number == 6 || number == 7 || number == 8 || number == 9) {
+        // 右下
+        glBegin(GL_POLYGON);
+            glVertex2i(w_1 + Xzurasu + slide, 5 * h_1);
+            glVertex2i(w_1 + w_one + Xzurasu + slide, 5 * h_1 + h_one);
+            glVertex2i(w_1 + w_one + Xzurasu + slide,  5 * h_1 - h_one + Yzurasu);
+            glVertex2i(w_1 + Xzurasu + slide, 5 * h_1 + Yzurasu);
+            glVertex2i(w_1 - w_one + Xzurasu + slide, 5 * h_1 - h_one + Yzurasu);
+            glVertex2i(w_1 - w_one + Xzurasu + slide, 5 * h_1 + h_one);
+        glEnd();
+    }    
+
+}
+
+void DrawColon(int w, int h, int slide) {
+    int w_1 = w / 10;
+    int h_1 = h / 10;
+    int w_one = w_1 / 10;
+    int h_one = h_1 / 10;
+    int x = 2 * w_1 + 4 * w_one;
+    int y = 5 * h_1 - 6 * h_one;
+    int nextY = h / 10;
+    int quadSize = 2 * w_one;
+    glBegin(GL_QUADS);
+        glVertex2i(x + slide, y);
+        glVertex2i(x + slide, y + quadSize);
+        glVertex2i(x + quadSize + slide, y+quadSize);
+        glVertex2i(x + quadSize + slide, y);
+    glEnd();
+
+    glBegin(GL_QUADS);
+        glVertex2i(x + slide, y + nextY);
+        glVertex2i(x + slide, y + quadSize + nextY);
+        glVertex2i(x + quadSize + slide, y + quadSize + nextY);
+        glVertex2i(x + quadSize + slide, y + nextY);
+    glEnd();
+}
+
+void SevenSegClock(int w, int h, int r, int g, int b) {
+    // 時間取得
+    int hour, min, sec, mday, mon, year, wday;
+    GetTime(&hour, &min, &sec, &mday, &mon, &year, &wday);
+
+    //printf("%d/%d/%d %d:%02d:%02d\n", year + 1900, mon + 1, mday, hour, min, sec);
+
+    // 背景
+    BackGround(w, h);
+
+    // 時間 
+    int slide = - w / 10 + 4 * w / 100;
+    DrawSevenSeg(w, h, r, g, b, slide, hour / 10 % 10);
+    slide += w / 10  + 4 * w / 100;
+    DrawSevenSeg(w, h, r, g, b, slide, hour % 10);
+    DrawColon(w, h, slide);
+
+    // 分
+    slide += 2 * w / 10;
+    DrawSevenSeg(w, h, r, g, b, slide, min / 10 % 10);
+    slide += w / 10  + 4 * w / 100;
+    DrawSevenSeg(w, h, r, g, b, slide, min % 10);
+    DrawColon(w, h, slide);
+
+    // 秒
+    slide += 2 * w / 10;
+    DrawSevenSeg(w, h, r, g, b, slide, sec / 10 % 10);
+    slide += w / 10  + 4 * w / 100;
+    DrawSevenSeg(w, h, r, g, b, slide, sec % 10);
+}
