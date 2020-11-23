@@ -6,8 +6,8 @@
 #include <string.h>
 
 // 背景色と時計の種類を管理するグローバル変数
-int backColorMode = 100;
-int clockMode = 0;
+int backColorMode = 100; // 0のとき背景色が白、1のとき背景色が黒
+int clockMode = 0; // 0のときアナログ時計、1のときデジタル時計、2のとき7セグメントLED時計
 
 // 関数のプロトタイプ宣言
 void Display(void);
@@ -161,10 +161,11 @@ int DayOrNight() {
 
     hour = ts->tm_hour;
 
-    if (hour < 7 || hour > 18) { // 7時から18時を昼とする
-        return 1;
+    // 7時から18時を昼、19時から6時を夜とする
+    if (hour < 7 || hour > 18) {
+        return 1; // 夜
     } else {
-        return 0;
+        return 0; // 昼
     }
 }
 
@@ -186,12 +187,12 @@ void PrintColorText(int x, int y, char *str, int r, int g, int b) {
 
 // 影付きで文字を描画
 void PrintShadowedText(int x, int y, char *str, int r, int g, int b) {
-    if (backColorMode == 0) {
+    if (backColorMode == 0) { // 背景色が白
         PrintColorText(x + 2, y + 2, str, 204, 204, 204);
         PrintColorText(x + 1, y + 1, str, 204, 204, 204);
         PrintColorText(x, y, str, r, g, b);
         PrintColorText(x - 1, y - 1, str, r, g, b);
-    } else if (backColorMode == 1) {
+    } else if (backColorMode == 1) { // 背景色が黒
         PrintColorText(x + 2, y + 2, str, 77, 77, 77);
         PrintColorText(x + 1, y + 1, str, 77, 77, 77);
         PrintColorText(x, y, str, r, g, b);
