@@ -3,10 +3,10 @@
 #
 
 #  最終目的のファイル
-TARGET = clock.exe
+TARGET = j17429.exe
 
 #  ソースファイル(*.c)の一覧
-SRCS = clock.c
+SRCS = j17429.c
 #  オブジェクトファイル(*.o)の一覧
 OBJS = ${SRCS:.c=.o}
 
