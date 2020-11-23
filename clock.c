@@ -50,6 +50,11 @@ int main(int argc, char **argv) {
 
 // ウィンドウの表示内容を更新する関数
 void Display(void) {
+    // デジタル時計のときウィンドウサイズを400x400に固定 
+    if (clockMode == 1) {
+        glutReshapeWindow(400, 400);
+    }
+
     glClear(GL_COLOR_BUFFER_BIT); // 初期設定
 
     // 現在のウィンドウサイズ取得
@@ -80,7 +85,7 @@ void Display(void) {
         }
     }
     
-    glFlush();
+    glFlush(); // OpenGLの命令をすべて呼び出す
     glutSwapBuffers(); // 作業用バッファと表示用バッファ入れ替え
 }
 
