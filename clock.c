@@ -188,15 +188,19 @@ void PrintColorText(int x, int y, char *str, int r, int g, int b) {
 // 影付きで文字を描画
 void PrintShadowedText(int x, int y, char *str, int r, int g, int b) {
     if (backColorMode == 0) { // 背景色が白
+        // 影を描画
         PrintColorText(x + 2, y + 2, str, 204, 204, 204);
         PrintColorText(x + 1, y + 1, str, 204, 204, 204);
+        // 太文字で文字を描画
         PrintColorText(x, y, str, r, g, b);
-        PrintColorText(x - 1, y - 1, str, r, g, b);
+        PrintColorText(x - 1, y, str, r, g, b);
     } else if (backColorMode == 1) { // 背景色が黒
+        // 影を描画
         PrintColorText(x + 2, y + 2, str, 77, 77, 77);
         PrintColorText(x + 1, y + 1, str, 77, 77, 77);
+        // 太文字で文字を描画
         PrintColorText(x, y, str, r, g, b);
-        PrintColorText(x - 1, y - 1, str, r, g, b);
+        PrintColorText(x - 1, y, str, r, g, b);
     }
 }
 
